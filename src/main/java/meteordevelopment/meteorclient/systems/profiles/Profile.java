@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.systems.profiles;
 
+import baritone.api.utils.SettingsUtil;
+import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.macros.Macros;
@@ -70,6 +72,14 @@ public class Profile implements ISerializable<Profile> {
         .build()
     );
 
+    public Setting<Boolean> baritone = sgSave.add(new BoolSetting.Builder()
+        .name("baritone")
+        .description("Whether the profile should save Baritone settings.")
+        .defaultValue(false)
+        .visible(() -> BaritoneUtils.IS_AVAILABLE)
+        .build()
+    );
+
     public Profile() {}
     public Profile(NbtElement tag) {
         fromTag((NbtCompound) tag);
@@ -82,6 +92,13 @@ public class Profile implements ISerializable<Profile> {
         if (macros.get()) Macros.get().load(folder);
         if (modules.get()) Modules.get().load(folder);
         if (waypoints.get()) Waypoints.get().load(folder);
+        if (baritone.get()) {
+            File settingsFile = new File(folder, SettingsUtil.SETTINGS_DEFAULT_NAME);
+            // Copy settings file to the baritone folder
+            if (settingsFile.exists()) {
+                BaritoneUtils.updateSettings(settingsFile);
+            }
+        }
     }
 
     public void save() {
@@ -91,6 +108,11 @@ public class Profile implements ISerializable<Profile> {
         if (macros.get()) Macros.get().save(folder);
         if (modules.get()) Modules.get().save(folder);
         if (waypoints.get()) Waypoints.get().save(folder);
+        if (baritone.get()) {
+            File copy = new File(folder, SettingsUtil.SETTINGS_DEFAULT_NAME);
+            // Copy settings file to the profile folder
+            BaritoneUtils.copySettings(copy);
+        }
     }
 
     public void delete() {
